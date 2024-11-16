@@ -1,13 +1,35 @@
 class Slider {
-  constructor(id, cycle = 3000) {
+  constructor(id, opts = { images: [], cycle: 3000 }) {
     this.container = document.getElementById(id);
+    this.options = opts;
+    this.container.innerHTML = this.render();
     this.items = this.container.querySelectorAll(
       ".slider-list__item, .slider-list__item--selected"
     );
-    this.cycle = cycle;
+    this.cycle = opts.cycle || 3000;
+    this.slideTo(0);
+  }
+  render() {
+    const images = this.options.images;
+    const content = images.map((image) =>
+      `
+        <li class="slider-list__item">
+          <img src="${image}"/>
+        </li>    
+      `.trim()
+    );
+
+    return `<ul>${content.join("")}</ul>`;
   }
   registerPlugins(...plugins) {
-    plugins.forEach((plugin) => plugin(this));
+    plugins.forEach((plugin) => {
+      const pluginContainer = document.createElement("div");
+      pluginContainer.className = ".slider-list__plugin";
+      pluginContainer.innerHTML = plugin.render(this.options.images);
+      this.container.appendChild(pluginContainer);
+
+      plugin.action(this);
+    });
   }
   getSelectedItem() {
     const selected = this.container.querySelector(
@@ -23,7 +45,7 @@ class Slider {
     if (selected) {
       selected.className = "slider-list__item";
     }
-    const item = this.items[idx];
+    let item = this.items[idx];
     if (item) {
       item.className = "slider-list__item--selected";
     }
@@ -55,59 +77,96 @@ class Slider {
   }
 }
 
-function pluginController(slider) {
-  const controller = slider.container.querySelector(".slide-list__control");
-  if (controller) {
-    const buttons = controller.querySelectorAll(
-      ".slide-list__control-buttons, .slide-list__control-buttons--selected"
-    );
-    controller.addEventListener("mouseover", (evt) => {
-      const idx = Array.from(buttons).indexOf(evt.target);
-      if (idx >= 0) {
-        slider.slideTo(idx);
-        slider.stop();
-      }
-    });
+const pluginController = {
+  render(images) {
+    return `
+        <div class="slide-list__control">
+          ${images
+            .map(
+              (image, i) => `
+              <span class="slide-list__control-buttons${
+                i === 0 ? "--selected" : ""
+              }"></span>
+           `
+            )
+            .join("")}
+        </div>    
+      `.trim();
+  },
+  action(slider) {
+    const controller = slider.container.querySelector(".slide-list__control");
 
-    controller.addEventListener("mouseout", (evt) => {
-      slider.start();
-    });
-
-    slider.addEventListener("slide", (evt) => {
-      const idx = evt.detail.index;
-      const selected = controller.querySelector(
-        ".slide-list__control-buttons--selected"
+    if (controller) {
+      const buttons = controller.querySelectorAll(
+        ".slide-list__control-buttons, .slide-list__control-buttons--selected"
       );
-      if (selected) selected.className = "slide-list__control-buttons";
-      buttons[idx].className = "slide-list__control-buttons--selected";
-    });
-  }
-}
+      controller.addEventListener("mouseover", (evt) => {
+        const idx = Array.from(buttons).indexOf(evt.target);
+        if (idx >= 0) {
+          slider.slideTo(idx);
+          slider.stop();
+        }
+      });
 
-function pluginPrevious(slider) {
-  const previous = slider.container.querySelector(".slide-list__previous");
-  if (previous) {
-    previous.addEventListener("click", (evt) => {
-      slider.stop();
-      slider.slidePrevious();
-      slider.start();
-      evt.preventDefault();
-    });
-  }
-}
+      controller.addEventListener("mouseout", (evt) => {
+        slider.start();
+      });
 
-function pluginNext(slider) {
-  const next = slider.container.querySelector(".slide-list__next");
-  if (next) {
-    next.addEventListener("click", (evt) => {
-      slider.stop();
-      slider.slideNext();
-      slider.start();
-      evt.preventDefault();
-    });
-  }
-}
+      slider.addEventListener("slide", (evt) => {
+        const idx = evt.detail.index;
+        const selected = controller.querySelector(
+          ".slide-list__control-buttons--selected"
+        );
+        if (selected) selected.className = "slide-list__control-buttons";
+        buttons[idx].className = "slide-list__control-buttons--selected";
+      });
+    }
+  },
+};
 
-const slider = new Slider("my-slider");
+const pluginPrevious = {
+  render() {
+    return `<a class="slide-list__previous"></a>`;
+  },
+  action(slider) {
+    const previous = slider.container.querySelector(".slide-list__previous");
+    if (previous) {
+      previous.addEventListener("click", (evt) => {
+        slider.stop();
+        slider.slidePrevious();
+        slider.start();
+        evt.preventDefault();
+      });
+    }
+  },
+};
+
+const pluginNext = {
+  render() {
+    return `<a class="slide-list__next"></a>`;
+  },
+  action(slider) {
+    const previous = slider.container.querySelector(".slide-list__next");
+    if (previous) {
+      previous.addEventListener("click", (evt) => {
+        slider.stop();
+        slider.slideNext();
+        slider.start();
+        evt.preventDefault();
+      });
+    }
+  },
+};
+
+const slider = new Slider("my-slider", {
+  images: [
+    "https://p5.ssl.qhimg.com/t0119c74624763dd070.png",
+    "https://p4.ssl.qhimg.com/t01adbe3351db853eb3.jpg",
+    "https://p2.ssl.qhimg.com/t01645cd5ba0c3b60cb.jpg",
+    "https://p4.ssl.qhimg.com/t01331ac159b58f5478.jpg",
+  ],
+  cycle: 3000,
+});
+
 slider.registerPlugins(pluginController, pluginPrevious, pluginNext);
 slider.start();
