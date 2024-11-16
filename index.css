@@ -1,5 +1,6 @@
 #my-slider {
   position: relative;
+  display: inline-block;
   width: 790px;
   height: 340px;
 }
