@@ -1,7 +1,16 @@
+:root {
+  --slider-width: 790px;
+  --slider-height: 340px;
+  --transition-duration: 1s;
+  --control-bg: rgba(255, 255, 255, 0.5);
+  --selected-color: red;
+  --unselected-color: white;
+}
+
 #my-slider {
   position: relative;
-  width: 790px;
-  height: 340px;
+  width: var(--slider-width);
+  height: var(--slider-height);
 }
 
 .slider-list ul {
@@ -16,20 +25,19 @@
 .slider-list__item,
 .slider-list__item--selected {
   position: absolute;
-  transition: opacity 1s;
+  transition: opacity var(--transition-duration);
   opacity: 0;
   text-align: center;
 }
 
 .slider-list__item--selected {
-  transition: opacity 1s;
   opacity: 1;
 }
 
 .slide-list__control {
   position: relative;
   display: table;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--control-bg);
   padding: 5px;
   border-radius: 12px;
   bottom: 30px;
@@ -58,10 +66,13 @@
 }
 
 .slide-list__previous {
+  /* 默认显示按钮 */
+  /* opacity: 1; */
   left: 0;
 }
 
 .slide-list__next {
+  /* opacity: 1; */
   right: 0;
 }
 
@@ -88,10 +99,10 @@
   height: 15px;
   border-radius: 50%;
   margin: 0 5px;
-  background-color: white;
+  background-color: var(--unselected-color);
   cursor: pointer;
 }
 
 .slide-list__control-buttons--selected {
-  background-color: red;
+  background-color: var(--selected-color);
 }

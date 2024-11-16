@@ -4,16 +4,18 @@ class Component {
     this.options = opts;
     this.container.innerHTML = this.render(opts.data);
   }
+
   registerPlugins(...plugins) {
     plugins.forEach((plugin) => {
       const pluginContainer = document.createElement("div");
-      pluginContainer.className = `.${name}__plugin`;
+      pluginContainer.className = `${this.options.name}__plugin`;
       pluginContainer.innerHTML = plugin.render(this.options.data);
       this.container.appendChild(pluginContainer);
 
       plugin.action(this);
     });
   }
+
   render(data) {
     /* abstract */
     return "";
@@ -29,26 +31,29 @@ class Slider extends Component {
     this.cycle = opts.cycle || 3000;
     this.slideTo(0);
   }
-  render(data) {
-    const content = data.map((image) =>
-      `
-        <li class="slider-list__item">
-          <img src="${image}"/>
-        </li>    
-      `.trim()
-    );
 
-    return `<ul>${content.join("")}</ul>`;
+  render(data) {
+    const content = data
+      .map((image) =>
+        `
+          <li class="slider-list__item">
+            <img src="${image}" alt="slider image"/>
+          </li>    
+        `.trim()
+      )
+      .join("");
+
+    return `<ul>${content}</ul>`;
   }
+
   getSelectedItem() {
-    const selected = this.container.querySelector(
-      ".slider-list__item--selected"
-    );
-    return selected;
+    return this.container.querySelector(".slider-list__item--selected");
   }
+
   getSelectedItemIndex() {
     return Array.from(this.items).indexOf(this.getSelectedItem());
   }
+
   slideTo(idx) {
     const selected = this.getSelectedItem();
     if (selected) {
@@ -63,24 +68,29 @@ class Slider extends Component {
     const event = new CustomEvent("slide", { bubbles: true, detail });
     this.container.dispatchEvent(event);
   }
+
   slideNext() {
     const currentIdx = this.getSelectedItemIndex();
     const nextIdx = (currentIdx + 1) % this.items.length;
     this.slideTo(nextIdx);
   }
+
   slidePrevious() {
     const currentIdx = this.getSelectedItemIndex();
     const previousIdx =
       (this.items.length + currentIdx - 1) % this.items.length;
     this.slideTo(previousIdx);
   }
+
   addEventListener(type, handler) {
     this.container.addEventListener(type, handler);
   }
+
   start() {
     this.stop();
     this._timer = setInterval(() => this.slideNext(), this.cycle);
   }
+
   stop() {
     clearInterval(this._timer);
   }
@@ -92,38 +102,38 @@ const pluginController = {
         <div class="slide-list__control">
           ${images
             .map(
-              (image, i) => `
-              <span class="slide-list__control-buttons${
-                i === 0 ? "--selected" : ""
-              }"></span>
-           `
+              (_, i) =>
+                `<span class="slide-list__control-buttons${
+                  i === 0 ? "--selected" : ""
+                }"></span>`
             )
             .join("")}
-        </div>    
+        </div>
       `.trim();
   },
-  action(slider) {
-    let controller = slider.container.querySelector(".slide-list__control");
 
+  action(slider) {
+    const controller = slider.container.querySelector(".slide-list__control");
     if (controller) {
-      let buttons = controller.querySelectorAll(
+      const buttons = controller.querySelectorAll(
         ".slide-list__control-buttons, .slide-list__control-buttons--selected"
       );
+
       controller.addEventListener("mouseover", (evt) => {
-        var idx = Array.from(buttons).indexOf(evt.target);
+        const idx = Array.from(buttons).indexOf(evt.target);
         if (idx >= 0) {
           slider.slideTo(idx);
           slider.stop();
         }
       });
 
-      controller.addEventListener("mouseout", (evt) => {
+      controller.addEventListener("mouseout", () => {
         slider.start();
       });
 
       slider.addEventListener("slide", (evt) => {
         const idx = evt.detail.index;
-        let selected = controller.querySelector(
+        const selected = controller.querySelector(
           ".slide-list__control-buttons--selected"
         );
         if (selected) selected.className = "slide-list__control-buttons";
@@ -137,8 +147,9 @@ const pluginPrevious = {
   render() {
     return `<a class="slide-list__previous"></a>`;
   },
+
   action(slider) {
-    let previous = slider.container.querySelector(".slide-list__previous");
+    const previous = slider.container.querySelector(".slide-list__previous");
     if (previous) {
       previous.addEventListener("click", (evt) => {
         slider.stop();
@@ -154,10 +165,11 @@ const pluginNext = {
   render() {
     return `<a class="slide-list__next"></a>`;
   },
+
   action(slider) {
-    let previous = slider.container.querySelector(".slide-list__next");
-    if (previous) {
-      previous.addEventListener("click", (evt) => {
+    const next = slider.container.querySelector(".slide-list__next");
+    if (next) {
+      next.addEventListener("click", (evt) => {
         slider.stop();
         slider.slideNext();
         slider.start();
@@ -167,8 +179,9 @@ const pluginNext = {
   },
 };
 
+// Initialize slider
 const slider = new Slider("my-slider", {
-  name: "slide-list",
+  name: "slider-list",
   data: [
     "https://p5.ssl.qhimg.com/t0119c74624763dd070.png",
     "https://p4.ssl.qhimg.com/t01adbe3351db853eb3.jpg",
