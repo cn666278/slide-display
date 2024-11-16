@@ -1,17 +1,36 @@
-class Slider {
-  constructor(id, opts = { images: [], cycle: 3000 }) {
+class Component {
+  constructor(id, opts = { name, data: [] }) {
     this.container = document.getElementById(id);
     this.options = opts;
-    this.container.innerHTML = this.render();
+    this.container.innerHTML = this.render(opts.data);
+  }
+  registerPlugins(...plugins) {
+    plugins.forEach((plugin) => {
+      const pluginContainer = document.createElement("div");
+      pluginContainer.className = `.${name}__plugin`;
+      pluginContainer.innerHTML = plugin.render(this.options.data);
+      this.container.appendChild(pluginContainer);
+
+      plugin.action(this);
+    });
+  }
+  render(data) {
+    /* abstract */
+    return "";
+  }
+}
+
+class Slider extends Component {
+  constructor(id, opts = { name: "slider-list", data: [], cycle: 3000 }) {
+    super(id, opts);
     this.items = this.container.querySelectorAll(
       ".slider-list__item, .slider-list__item--selected"
     );
     this.cycle = opts.cycle || 3000;
     this.slideTo(0);
   }
-  render() {
-    const images = this.options.images;
-    const content = images.map((image) =>
+  render(data) {
+    const content = data.map((image) =>
       `
         <li class="slider-list__item">
           <img src="${image}"/>
@@ -20,16 +39,6 @@ class Slider {
     );
 
     return `<ul>${content.join("")}</ul>`;
-  }
-  registerPlugins(...plugins) {
-    plugins.forEach((plugin) => {
-      const pluginContainer = document.createElement("div");
-      pluginContainer.className = ".slider-list__plugin";
-      pluginContainer.innerHTML = plugin.render(this.options.images);
-      this.container.appendChild(pluginContainer);
-
-      plugin.action(this);
-    });
   }
   getSelectedItem() {
     const selected = this.container.querySelector(
@@ -45,7 +54,7 @@ class Slider {
     if (selected) {
       selected.className = "slider-list__item";
     }
-    let item = this.items[idx];
+    const item = this.items[idx];
     if (item) {
       item.className = "slider-list__item--selected";
     }
@@ -94,14 +103,14 @@ const pluginController = {
       `.trim();
   },
   action(slider) {
-    const controller = slider.container.querySelector(".slide-list__control");
+    let controller = slider.container.querySelector(".slide-list__control");
 
     if (controller) {
-      const buttons = controller.querySelectorAll(
+      let buttons = controller.querySelectorAll(
         ".slide-list__control-buttons, .slide-list__control-buttons--selected"
       );
       controller.addEventListener("mouseover", (evt) => {
-        const idx = Array.from(buttons).indexOf(evt.target);
+        var idx = Array.from(buttons).indexOf(evt.target);
         if (idx >= 0) {
           slider.slideTo(idx);
           slider.stop();
@@ -114,7 +123,7 @@ const pluginController = {
 
       slider.addEventListener("slide", (evt) => {
         const idx = evt.detail.index;
-        const selected = controller.querySelector(
+        let selected = controller.querySelector(
           ".slide-list__control-buttons--selected"
         );
         if (selected) selected.className = "slide-list__control-buttons";
@@ -129,7 +138,7 @@ const pluginPrevious = {
     return `<a class="slide-list__previous"></a>`;
   },
   action(slider) {
-    const previous = slider.container.querySelector(".slide-list__previous");
+    let previous = slider.container.querySelector(".slide-list__previous");
     if (previous) {
       previous.addEventListener("click", (evt) => {
         slider.stop();
@@ -146,7 +155,7 @@ const pluginNext = {
     return `<a class="slide-list__next"></a>`;
   },
   action(slider) {
-    const previous = slider.container.querySelector(".slide-list__next");
+    let previous = slider.container.querySelector(".slide-list__next");
     if (previous) {
       previous.addEventListener("click", (evt) => {
         slider.stop();
@@ -159,7 +168,8 @@ const pluginNext = {
 };
 
 const slider = new Slider("my-slider", {
-  images: [
+  name: "slide-list",
+  data: [
     "https://p5.ssl.qhimg.com/t0119c74624763dd070.png",
     "https://p4.ssl.qhimg.com/t01adbe3351db853eb3.jpg",
     "https://p2.ssl.qhimg.com/t01645cd5ba0c3b60cb.jpg",
